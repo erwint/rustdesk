@@ -45,6 +45,17 @@
             </intent-filter>
         </receiver>
 
+        <!-- Start and stop on demand for trusted apps (RemoteControlReceiver). -->
+        <receiver
+            android:name=".RemoteControlReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.carriez.flutter_hbb.action.START_SERVICE" />
+                <action android:name="com.carriez.flutter_hbb.action.STOP_SERVICE" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".InputService"
             android:enabled="true"

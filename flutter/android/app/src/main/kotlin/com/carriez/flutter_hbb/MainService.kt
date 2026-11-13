@@ -346,6 +346,12 @@ class MainService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("whichService", "this service: ${Thread.currentThread()}")
         super.onStartCommand(intent, flags, startId)
+        if (intent?.action == ACT_STOP_SERVICE) {
+            // RemoteControlReceiver: what the stop button does, the Rust side included.
+            FFI.stopService()
+            destroy()
+            return START_NOT_STICKY
+        }
         if (intent?.action == ACT_INIT_MEDIA_PROJECTION_AND_SERVICE) {
             if (intent.getBooleanExtra(EXT_INIT_FROM_BOOT, false)) {
                 FFI.startService()
