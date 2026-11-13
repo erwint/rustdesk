@@ -36,6 +36,9 @@ restore() {
 }
 trap restore EXIT
 
+step "Submodules"
+git submodule update --init --depth 1
+
 step "Rust $RUST, Android target, build tools"
 rustup toolchain install "$RUST" --profile minimal -c rustfmt >/dev/null
 rustup target add aarch64-linux-android --toolchain "$RUST" >/dev/null
