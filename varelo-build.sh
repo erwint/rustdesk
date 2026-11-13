@@ -43,7 +43,8 @@ step "Rust $RUST, Android target, build tools"
 rustup toolchain install "$RUST" --profile minimal -c rustfmt >/dev/null
 rustup target add aarch64-linux-android --toolchain "$RUST" >/dev/null
 export RUSTUP_TOOLCHAIN="$RUST"
-export PATH="$C/cargo/bin:$PATH"
+# rustup's cargo and rustc, not a Homebrew Rust that ignores RUSTUP_TOOLCHAIN and has no Android std.
+export PATH="$C/cargo/bin:$HOME/.cargo/bin:$PATH"
 need() { [ -x "$C/cargo/bin/$1" ] || cargo install "$2" --version "$3" --locked --root "$C/cargo" ${4:-}; }
 need cargo-ndk cargo-ndk 3.1.2
 need cargo-expand cargo-expand 1.0.95
