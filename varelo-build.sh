@@ -85,6 +85,11 @@ cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generat
 git checkout -- flutter/pubspec.yaml
 
 step "Rust library"
+# bindgen with the NDK's clang and Android headers: Xcode's has no Android sysroot and fails
+# on stdlib.h (RustDesk's Linux CI gets this implicitly).
+NDK_LLVM="$NDK/toolchains/llvm/prebuilt/darwin-x86_64"
+export LIBCLANG_PATH="$NDK_LLVM/lib"
+export BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android="--target=aarch64-linux-android21 --sysroot=$NDK_LLVM/sysroot"
 ./flutter/ndk_arm64.sh
 JNI=flutter/android/app/src/main/jniLibs/arm64-v8a
 mkdir -p "$JNI"
