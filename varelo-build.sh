@@ -90,6 +90,9 @@ step "Rust library"
 NDK_LLVM="$NDK/toolchains/llvm/prebuilt/darwin-x86_64"
 export LIBCLANG_PATH="$NDK_LLVM/lib"
 export BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android="--target=aarch64-linux-android21 --sysroot=$NDK_LLVM/sysroot"
+# libsodium is built with autotools, which would take the Mac's ranlib and leave the Android
+# archive without a usable index ("not a mach-o file"); LLVM's tools handle both formats.
+export AR="$NDK_LLVM/bin/llvm-ar" RANLIB="$NDK_LLVM/bin/llvm-ranlib" STRIP="$NDK_LLVM/bin/llvm-strip"
 ./flutter/ndk_arm64.sh
 JNI=flutter/android/app/src/main/jniLibs/arm64-v8a
 mkdir -p "$JNI"
