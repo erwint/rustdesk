@@ -22,7 +22,11 @@ SDK="$HOME/Library/Android/sdk"
 NDK="$SDK/ndk/28.2.13676358" # r28c, NDK_VERSION in flutter-build.yml
 SIGN="$HOME/.rustdesk-varelo-signing"
 export ANDROID_NDK_HOME="$NDK" ANDROID_NDK_ROOT="$NDK" ANDROID_HOME="$SDK" ANDROID_SDK_ROOT="$SDK"
-export JAVA_HOME="${JAVA_HOME:-/Applications/Android Studio.app/Contents/jbr/Contents/Home}"
+# Java 17 as in RustDesk's CI: with a newer JDK, a Flutter plugin's -Werror trips over the
+# warning about its Java 8 source level.
+JDK17="/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+[ -d "$JDK17" ] || { echo "Java 17 missing: brew install openjdk@17"; exit 1; }
+export JAVA_HOME="$JDK17"
 export CARGO_TARGET_DIR="$ROOT/target"
 
 step() { printf '\n=== %s\n' "$*"; }
