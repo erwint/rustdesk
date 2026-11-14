@@ -45,6 +45,20 @@
             </intent-filter>
         </receiver>
 
+        <!-- Start from a trusted app in the foreground, needing no extra permission (RemoteStartActivity). -->
+        <activity
+            android:name=".RemoteStartActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="com.carriez.flutter_hbb.action.START_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
         <!-- Start and stop on demand for trusted apps (RemoteControlReceiver). -->
         <receiver
             android:name=".RemoteControlReceiver"
