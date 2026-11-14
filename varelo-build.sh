@@ -90,30 +90,39 @@ if [ ! -x "$VCPKG_ROOT/vcpkg" ]; then
 fi
 ./flutter/build_android_deps.sh arm64-v8a
 
-step "Dart/Rust bridge (Flutter 3.22.3)"
-# The same downgrade CI makes for 3.22.3: extended_text 14 needs a newer Dart.
-sed -i '' -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' flutter/pubspec.yaml
-(cd flutter && "$FLUTTER_BRIDGE" pub get)
-PATH="$(dirname "$FLUTTER_BRIDGE"):$PATH" flutter_rust_bridge_codegen \
-    --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart \
-    --c-output ./flutter/macos/Runner/bridge_generated.h
-cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
-git checkout -- flutter/pubspec.yaml
+# Bridge and library depend only on the Rust side (src, libs with hbb_common, Cargo files).
+# Unchanged since the last good build, and only Kotlin or Dart changed: they are reused.
+LIB="$CARGO_TARGET_DIR/aarch64-linux-android/release/liblibrustdesk.so"
+RUST_SUM=$( (git ls-files -s src libs Cargo.toml Cargo.lock; git diff HEAD -- src libs Cargo.toml Cargo.lock) | shasum | cut -d' ' -f1)
+if [ "$RUST_SUM" = "$(cat "$C/rust.sum" 2>/dev/null)" ] && [ -f "$LIB" ] && [ -f flutter/lib/generated_bridge.dart ]; then
+    step "Bridge and Rust library: Rust side unchanged, reused"
+else
+    step "Dart/Rust bridge (Flutter 3.22.3)"
+    # The same downgrade CI makes for 3.22.3: extended_text 14 needs a newer Dart.
+    sed -i '' -e 's/extended_text: 14.0.0/extended_text: 13.0.0/g' flutter/pubspec.yaml
+    (cd flutter && "$FLUTTER_BRIDGE" pub get)
+    PATH="$(dirname "$FLUTTER_BRIDGE"):$PATH" flutter_rust_bridge_codegen \
+        --rust-input ./src/flutter_ffi.rs --dart-output ./flutter/lib/generated_bridge.dart \
+        --c-output ./flutter/macos/Runner/bridge_generated.h
+    cp ./flutter/macos/Runner/bridge_generated.h ./flutter/ios/Runner/bridge_generated.h
+    git checkout -- flutter/pubspec.yaml
 
-step "Rust library"
-# bindgen with the NDK's clang and Android headers: Xcode's has no Android sysroot and fails
-# on stdlib.h (RustDesk's Linux CI gets this implicitly).
-NDK_LLVM="$NDK/toolchains/llvm/prebuilt/darwin-x86_64"
-export LIBCLANG_PATH="$NDK_LLVM/lib"
-export BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android="--target=aarch64-linux-android21 --sysroot=$NDK_LLVM/sysroot"
-# libsodium is built with autotools, which would take the Mac's ranlib and leave the Android
-# archive without a usable index ("not a mach-o file"); LLVM's tools handle both formats.
-export AR="$NDK_LLVM/bin/llvm-ar" RANLIB="$NDK_LLVM/bin/llvm-ranlib" STRIP="$NDK_LLVM/bin/llvm-strip"
-./flutter/ndk_arm64.sh
+    step "Rust library"
+    # bindgen with the NDK's clang and Android headers: Xcode's has no Android sysroot and fails
+    # on stdlib.h (RustDesk's Linux CI gets this implicitly).
+    NDK_LLVM="$NDK/toolchains/llvm/prebuilt/darwin-x86_64"
+    export LIBCLANG_PATH="$NDK_LLVM/lib"
+    export BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android="--target=aarch64-linux-android21 --sysroot=$NDK_LLVM/sysroot"
+    # libsodium is built with autotools, which would take the Mac's ranlib and leave the Android
+    # archive without a usable index ("not a mach-o file"); LLVM's tools handle both formats.
+    export AR="$NDK_LLVM/bin/llvm-ar" RANLIB="$NDK_LLVM/bin/llvm-ranlib" STRIP="$NDK_LLVM/bin/llvm-strip"
+    ./flutter/ndk_arm64.sh
+    echo "$RUST_SUM" > "$C/rust.sum"
+fi
 JNI=flutter/android/app/src/main/jniLibs/arm64-v8a
 mkdir -p "$JNI"
 cp "$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" "$JNI/"
-cp "$CARGO_TARGET_DIR/aarch64-linux-android/release/liblibrustdesk.so" "$JNI/librustdesk.so"
+cp "$LIB" "$JNI/librustdesk.so"
 
 step "APK (Flutter 3.24.5)"
 sed -i '' -e 's/signingConfigs.release/signingConfigs.debug/g' flutter/android/app/build.gradle
