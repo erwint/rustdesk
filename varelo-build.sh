@@ -48,7 +48,7 @@ fi
 
 # Files the build edits temporarily, put back however it ends.
 restore() {
-    git -C "$ROOT" checkout -- flutter/pubspec.yaml flutter/android/app/build.gradle flutter/android/gradle.properties 2>/dev/null || true
+    git -C "$ROOT" checkout -- flutter/pubspec.yaml flutter/pubspec.lock flutter/android/app/build.gradle flutter/android/gradle.properties 2>/dev/null || true
 }
 trap restore EXIT
 
