@@ -31,8 +31,20 @@ export CARGO_TARGET_DIR="$ROOT/target"
 
 step() { printf '\n=== %s\n' "$*"; }
 
-[ -d "$NDK" ] || { echo "NDK r28c missing: install 28.2.13676358 in Android Studio's SDK manager"; exit 1; }
-[ -f "$SIGN/release.p12" ] || { echo "No signing key: run ./varelo-signing.sh first"; exit 1; }
+# Everything a fresh Mac needs, named before anything is built instead of failing halfway.
+missing=""
+[ -d "$NDK" ] || missing="$missing\n  NDK r28c: install 28.2.13676358 in Android Studio's SDK manager"
+[ -f "$SIGN/release.p12" ] || missing="$missing\n  signing key: run ./varelo-signing.sh"
+command -v rustup >/dev/null || missing="$missing\n  rustup: https://rustup.rs"
+command -v nasm >/dev/null || missing="$missing\n  nasm (for the video codecs): brew install nasm"
+command -v cmake >/dev/null || missing="$missing\n  cmake: brew install cmake"
+command -v pkg-config >/dev/null || missing="$missing\n  pkg-config: brew install pkg-config"
+[ -x /Library/Developer/CommandLineTools/usr/bin/clang ] || [ -x /Applications/Xcode.app/Contents/Developer/usr/bin/clang ] ||
+    missing="$missing\n  Xcode command line tools: xcode-select --install"
+if [ -n "$missing" ]; then
+    printf "Missing:$missing\n"
+    exit 1
+fi
 
 # Files the build edits temporarily, put back however it ends.
 restore() {
