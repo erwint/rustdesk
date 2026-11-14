@@ -36,7 +36,7 @@ step() { printf '\n=== %s\n' "$*"; }
 
 # Files the build edits temporarily, put back however it ends.
 restore() {
-    git -C "$ROOT" checkout -- flutter/pubspec.yaml flutter/android/app/build.gradle 2>/dev/null || true
+    git -C "$ROOT" checkout -- flutter/pubspec.yaml flutter/android/app/build.gradle flutter/android/gradle.properties 2>/dev/null || true
 }
 trap restore EXIT
 
@@ -105,8 +105,11 @@ cp "$CARGO_TARGET_DIR/aarch64-linux-android/release/liblibrustdesk.so" "$JNI/lib
 
 step "APK (Flutter 3.24.5)"
 sed -i '' -e 's/signingConfigs.release/signingConfigs.debug/g' flutter/android/app/build.gradle
+# Flutter hands Gradle Android Studio's own JDK and ignores JAVA_HOME; this file wins.
+echo "org.gradle.java.home=$JAVA_HOME" >> flutter/android/gradle.properties
+(cd flutter/android && ./gradlew --stop >/dev/null 2>&1 || true)
 (cd flutter && "$FLUTTER_APK" pub get && "$FLUTTER_APK" build apk --release --target-platform android-arm64 --split-per-abi)
-git checkout -- flutter/android/app/build.gradle
+git checkout -- flutter/android/app/build.gradle flutter/android/gradle.properties
 
 step "Signing"
 APKSIGNER=$(ls -d "$SDK"/build-tools/*/apksigner | sort -V | tail -1)
