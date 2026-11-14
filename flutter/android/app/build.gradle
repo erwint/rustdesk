@@ -99,7 +99,9 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.carriez.flutter_hbb"
+        // Varelo build: its own id, so it neither looks like the Play Store RustDesk signed
+        // by someone else (Play Protect blocks that) nor replaces it.
+        applicationId "com.ryowave.varelo.remote"
         minSdkVersion 22
         targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
