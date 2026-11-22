@@ -30,6 +30,7 @@ class RemoteStartActivity : Activity() {
             finish()
             return
         }
+        TrustedStart.arm()
         val it = Intent(this, MainService::class.java).apply {
             action = ACT_INIT_MEDIA_PROJECTION_AND_SERVICE
             // The same as after a boot: go online, then ask for the screen.

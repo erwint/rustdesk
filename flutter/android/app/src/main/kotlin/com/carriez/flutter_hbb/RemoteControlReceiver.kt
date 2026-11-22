@@ -38,6 +38,7 @@ class RemoteControlReceiver : BroadcastReceiver() {
                     Log.w(logTag, "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS or SYSTEM_ALERT_WINDOW is not granted")
                     return
                 }
+                TrustedStart.arm()
                 val it = Intent(context, MainService::class.java).apply {
                     action = ACT_INIT_MEDIA_PROJECTION_AND_SERVICE
                     // The same as after a boot: go online, then ask for the screen.

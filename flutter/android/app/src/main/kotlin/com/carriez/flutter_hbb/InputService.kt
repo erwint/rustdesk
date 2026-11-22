@@ -769,13 +769,18 @@ class InputService : AccessibilityService() {
 
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        // Android's screen capture question after a trusted start (TrustedStart).
+        if (event.packageName == "com.android.systemui") TrustedStart.answerProjection(this)
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         ctx = this
         notifyInputState()
-        val info = AccessibilityServiceInfo()
+        // The info from accessibility_service_config.xml, changed: a fresh one would lose its
+        // events (System UI's windows, for TrustedStart) and its "accessibility tool", without
+        // which Android hides sensitive windows such as the screen capture question.
+        val info = serviceInfo ?: AccessibilityServiceInfo()
         if (Build.VERSION.SDK_INT >= 33) {
             info.flags = FLAG_INPUT_METHOD_EDITOR or FLAG_RETRIEVE_INTERACTIVE_WINDOWS
         } else {
